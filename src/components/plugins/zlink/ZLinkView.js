@@ -5,11 +5,18 @@ import {
   ButtonView,
   icons,
   submitHandler,
+  KeystrokeHandler,
+  FocusTracker,
+  FocusCycler
 } from "ckeditor5";
 
 export class FormView extends View {
   constructor(locale) {
     super(locale);
+
+    /** accessibility - helpers */
+    this.keystrokeHandler = new KeystrokeHandler();
+    this.focusTracker = new FocusTracker();
 
     /** input views */
     this.titleInputView = this._createInput("Label");
@@ -39,6 +46,17 @@ export class FormView extends View {
       this.cancelButtonView,
     ]);
 
+    /** focus cycler */
+    this._focusCycler = new FocusCycler({
+      focusables: this.childViews,
+      keystrokeHandler: this.keystrokeHandler,
+      focusTracker: this.focusTracker,
+      actions: {
+        focusPrevious: 'shift+tab',
+        focusNext: 'tab'
+      }
+    })
+
     this.setTemplate({
       tag: "form",
       attributes: {
@@ -64,9 +82,30 @@ export class FormView extends View {
     submitHandler({
       view: this,
     });
+
+    /** some accessibility skills */
+    this.childViews.forEach((view) => {
+      /** add each view to the focusTracker */
+      this.focusTracker.add(view.element);
+    });
+
+    /** start listening for the keystrokes coming from #element */
+    this.keystrokeHandler.listenTo(this.element);
   }
 
   focus() {
-    this.childViews.first.focus();
+    // this.childViews.first.focus();
+    if (this.titleInputView.isEnabled) {
+      this.titleInputView.focus()
+    } else {
+      this.linkInputView.focus()
+    }
+  }
+
+  destroy() {
+    super.destroy();
+
+    this.focusTracker.destroy();
+    this.keystrokeHandler.destroy();
   }
 }

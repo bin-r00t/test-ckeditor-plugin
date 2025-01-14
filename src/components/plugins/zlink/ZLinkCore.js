@@ -1,9 +1,12 @@
 import { Plugin } from "ckeditor5";
+import ZLinkCommand from "./ZLinkCommand";
 
 export default class ZLinkCore extends Plugin {
   init() {
     this._defineSchema();
     this._defineConverters();
+
+    this.editor.commands.add("insertLink", new ZLinkCommand(this.editor));
   }
 
   _defineSchema() {
@@ -22,6 +25,7 @@ export default class ZLinkCore extends Plugin {
         const { writer } = conversionApi;
         return writer.createAttributeElement("a", {
           href: modelAttributeValue,
+          target: "_blank",
         });
       },
     });
